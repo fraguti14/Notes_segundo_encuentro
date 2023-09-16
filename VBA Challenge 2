@@ -1,0 +1,143 @@
+Sub StockAnalysisWithGreatestValues()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim Ticker As String
+    Dim OpenPrice As Double
+    Dim ClosePrice As Double
+    Dim YearlyChange As Double
+    Dim PercentChange As Double
+    Dim TotalVolume As Double
+    Dim SummaryRow As Long
+    Dim GreatestIncrease As Double
+    Dim GreatestDecrease As Double
+    Dim GreatestVolume As Double
+    Dim TickerIncrease As String
+    Dim TickerDecrease As String
+    Dim TickerVolume As String
+    
+    ' Loop through all worksheets in the workbook
+    For Each ws In ThisWorkbook.Worksheets
+        ws.Activate
+        
+        ' Find the last row with data in column A
+        LastRow = Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Initialize variables for summary table
+        SummaryRow = 2
+        TotalVolume = 0
+        GreatestIncrease = 0
+        GreatestDecrease = 0
+        GreatestVolume = 0
+        
+        ' Set headers for summary table
+        Cells(1, 9).Value = "Ticker"
+        Cells(1, 10).Value = "Yearly Change"
+        Cells(1, 11).Value = "Percent Change"
+        Cells(1, 12).Value = "Total Stock Volume"
+        Cells(2, 15).Value = "Greatest % Increase"
+        Cells(3, 15).Value = "Greatest % Decrease"
+        Cells(4, 15).Value = "Greatest Total Volume"
+        Cells(1, 16).Value = "Ticker"
+        Cells(1, 17).Value = "Value"
+        
+        ' Loop through the data
+        For i = 2 To LastRow
+            ' Check if the current ticker is different from the previous one
+            If Cells(i, 1).Value <> Ticker Then
+                If TotalVolume <> 0 Then
+                    ' Calculate Yearly Change and Percent Change
+                    YearlyChange = ClosePrice - OpenPrice
+                    If OpenPrice <> 0 Then
+                        PercentChange = (YearlyChange / OpenPrice) * 100
+                    Else
+                        PercentChange = 0
+                    End If
+                    
+                    ' Output data to the summary table
+                    Cells(SummaryRow, 9).Value = Ticker
+                    Cells(SummaryRow, 10).Value = YearlyChange
+                    Cells(SummaryRow, 11).Value = PercentChange
+                    Cells(SummaryRow, 12).Value = TotalVolume
+                    
+                    ' Apply conditional formatting to the Yearly Change column
+                    If YearlyChange > 0 Then
+                        Cells(SummaryRow, 10).Interior.Color = RGB(0, 255, 0)
+                    ElseIf YearlyChange < 0 Then
+                        Cells(SummaryRow, 10).Interior.Color = RGB(255, 0, 0)
+                    End If
+                    
+                    ' Update Greatest % Increase, Greatest % Decrease, and Greatest Total Volume
+                    If PercentChange > GreatestIncrease Then
+                        GreatestIncrease = PercentChange
+                        TickerIncrease = Ticker
+                    End If
+                    If PercentChange < GreatestDecrease Then
+                        GreatestDecrease = PercentChange
+                        TickerDecrease = Ticker
+                    End If
+                    If TotalVolume > GreatestVolume Then
+                        GreatestVolume = TotalVolume
+                        TickerVolume = Ticker
+                    End If
+                    
+                    ' Reset variables for the new ticker
+                    SummaryRow = SummaryRow + 1
+                    TotalVolume = 0
+                End If
+                
+                ' Set new Ticker and Open Price
+                Ticker = Cells(i, 1).Value
+                OpenPrice = Cells(i, 3).Value
+            End If
+            
+            ' Accumulate Total Volume
+            TotalVolume = TotalVolume + Cells(i, 7).Value
+            
+            ' Set Close Price for the current Ticker
+            ClosePrice = Cells(i, 6).Value
+        Next i
+        
+        ' Calculate Yearly Change and Percent Change for the last ticker
+        YearlyChange = ClosePrice - OpenPrice
+        If OpenPrice <> 0 Then
+            PercentChange = (YearlyChange / OpenPrice) * 100
+        Else
+            PercentChange = 0
+        End If
+        
+        ' Output data for the last ticker to the summary table
+        Cells(SummaryRow, 9).Value = Ticker
+        Cells(SummaryRow, 10).Value = YearlyChange
+        Cells(SummaryRow, 11).Value = PercentChange
+        Cells(SummaryRow, 12).Value = TotalVolume
+        
+        ' Apply conditional formatting to the Yearly Change column for the last ticker
+        If YearlyChange > 0 Then
+            Cells(SummaryRow, 10).Interior.Color = RGB(0, 255, 0)
+        ElseIf YearlyChange < 0 Then
+            Cells(SummaryRow, 10).Interior.Color = RGB(255, 0, 0)
+        End If
+        
+        ' Update Greatest % Increase, Greatest % Decrease, and Greatest Total Volume for the last ticker
+        If PercentChange > GreatestIncrease Then
+            GreatestIncrease = PercentChange
+            TickerIncrease = Ticker
+        End If
+        If PercentChange < GreatestDecrease Then
+            GreatestDecrease = PercentChange
+            TickerDecrease = Ticker
+        End If
+        If TotalVolume > GreatestVolume Then
+            GreatestVolume = TotalVolume
+            TickerVolume = Ticker
+        End If
+        
+        ' Output the greatest values to the summary table
+        Cells(2, 16).Value = TickerIncrease
+        Cells(2, 17).Value = GreatestIncrease & "%"
+        Cells(3, 16).Value = TickerDecrease
+        Cells(3, 17).Value = GreatestDecrease & "%"
+        Cells(4, 16).Value = TickerVolume
+        Cells(4, 17).Value = GreatestVolume
+    Next ws
+End Sub
